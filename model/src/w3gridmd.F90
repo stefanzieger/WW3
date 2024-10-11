@@ -866,7 +866,7 @@ MODULE W3GRIDMD
 #endif
   !
 #ifdef W3_ST6
-  REAL                    :: SINA0, SINWS, SINFC,                 &
+  REAL                    :: SINA0, SINWS, SINFC, SINAHAT,        &
        SDSA1, SDSA2, SWLB1
   INTEGER                 :: SDSP1, SDSP2
   LOGICAL                 :: SDSET, CSTB1
@@ -1053,7 +1053,7 @@ MODULE W3GRIDMD
 #endif
 
 #ifdef W3_ST6
-  NAMELIST /SIN6/ SINA0, SINWS, SINFC
+  NAMELIST /SIN6/ SINA0, SINWS, SINFC, SINAHAT
   NAMELIST /SDS6/ SDSET, SDSA1, SDSA2, SDSP1, SDSP2
   NAMELIST /SWL6/ SWLB1, CSTB1
 #endif
@@ -1744,6 +1744,7 @@ CONTAINS
     SINA0  = 0.09
     SINWS  = 32.0
     SINFC  = 6.0
+    SINAHAT  = 0.0095
 #endif
     !
 #ifdef W3_ST1
@@ -1839,9 +1840,10 @@ CONTAINS
     SIN6A0 = SINA0
     SIN6WS = SINWS
     SIN6FC = SINFC
+    SIN6AHAT = SINAHAT
     J = 1
     IF ( SIN6A0.LE.0. ) J = 2
-    WRITE (NDSO,921) YESXNO(J), SIN6A0, SIN6WS, SIN6FC
+    WRITE (NDSO,921) YESXNO(J), SIN6A0, SIN6WS, SIN6FC, SIN6AHAT
 #endif
     !
     ! 6.e Define Snl.
@@ -3236,7 +3238,7 @@ CONTAINS
            CAPCHA, CHAMIN, CHA0, UCAP, SIGMAUCAP
 #endif
 #ifdef W3_ST6
-      WRITE (NDSO,2920) SINA0, SINWS, SINFC
+      WRITE (NDSO,2920) SINA0, SINWS, SINFC, SINAHAT
 #endif
 #ifdef W3_NL1
       WRITE (NDSO,2922) LAMBDA, NLPROP, KDCONV, KDMIN,       &
@@ -6295,8 +6297,10 @@ CONTAINS
 921 FORMAT ( '  negative wind input active       :  ',A/    &
          '  attenuation factor               :  ',F6.2/ &
          '  wind speed scaling factor        :  ',F6.2/ &
-         '  frequency cut-off factor         :  ',F6.2/)
-2920 FORMAT ( '  &SIN6 SINA0 =', F6.3, ', SINWS =', F6.2, ', SINFC =', F6.2, ' /')
+         '  frequency cut-off factor         :  ',F6.2/ &
+         '  minimum Charnock coefficient     :  ',F8.5/ )
+2920 FORMAT ( '  &SIN6 SINA0 =', F6.3, ', SINWS =', F6.2, &
+         ', SINFC =', F6.2, ', SINAHAT =', F8.5, ' /')
 #endif
     !
 #ifdef W3_NL0

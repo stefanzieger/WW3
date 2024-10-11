@@ -14,7 +14,7 @@
 !>
 !> @author H. L. Tolman
 !> @author F. Ardhuin
-!> @date   22-Mar-2021
+!> @date   11-Oct-2024
 !>
 !> @copyright Copyright 2009-2022 National Weather Service (NWS),
 !>       National Oceanic and Atmospheric Administration.  All rights
@@ -28,7 +28,7 @@ MODULE W3SRCEMD
   !/                  |           H. L. Tolman            |
   !/                  |            F. Ardhuin             |
   !/                  |                        FORTRAN 90 |
-  !/                  | Last update :         22-Mar-2021 |
+  !/                  | Last update :         11-Oct-2024 |
   !/                  +-----------------------------------+
   !/
   !/    For updates see subroutine.
@@ -265,6 +265,7 @@ CONTAINS
     !/    22-Mar-2021 : Add extra fields used in coupling   ( version 7.13 )
     !/    07-Jun-2021 : S_{nl5} GKE NL5 (Q. Liu)            ( version 7.13 )
     !/    19-Jul-2021 : Momentum and air density support    ( version 7.14 )
+    !/    11-Oct-2024 : Provide CHARN to ST6 (S. Zieger)
     !/
     !/    Copyright 2009-2013 National Weather Service (NWS),
     !/       National Oceanic and Atmospheric Administration.  All rights
@@ -1214,7 +1215,7 @@ CONTAINS
 
 #ifdef W3_ST6
       CALL W3SIN6 ( SPEC, CG1, WN2, U10ABS, USTAR, USTDIR, CD, DAIR, &
-           TAUWX, TAUWY, TAUWAX, TAUWAY, VSIN, VDIN )
+           TAUWX, TAUWY, TAUWAX, TAUWAY, CHARN, VSIN, VDIN )
 #endif
       !
       ! 2.b Nonlinear interactions.

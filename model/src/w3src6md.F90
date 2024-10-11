@@ -22,7 +22,7 @@
 !>
 !> @author S. Zieger
 !> @author Q. Liu
-!> @date   26-Jun-2018
+!> @date   11-Oct-2024
 !>
 MODULE W3SRC6MD
   !/
@@ -31,7 +31,7 @@ MODULE W3SRC6MD
   !/                  |           S. Zieger               |
   !/                  |           Q. Liu                  |
   !/                  |                        FORTRAN 90 |
-  !/                  | Last update :         26-Jun-2018 |
+  !/                  | Last update :         11-Oct-2024 |
   !/                  +-----------------------------------+
   !/
   !/    29-May-2009 : Origination (w3srcxmd.ftn)          ( version 3.14 )
@@ -39,6 +39,7 @@ MODULE W3SRC6MD
   !/                                                         (S. Zieger)
   !/    26-Jun-2017 : Recalibration of ST6                ( verison 6.06 )
   !/                                                         (Q. Liu   )
+  !/    11-Oct-2024 : Charnock parameter output added     ( verison 7.14 )
   !/
   !/    Copyright 2009 National Weather Service (NWS),
   !/       National Oceanic and Atmospheric Administration.  All rights
@@ -280,6 +281,7 @@ CONTAINS
   !> @param[out] TAUWY    Component of the wave-supported stress.
   !> @param[out] TAUWNX   Component of the negative part of the stress.
   !> @param[out] TAUWNY   Component of the negative part of the stress.
+  !> @param[out] CHARN    Charnck parameter (sea-state dependent).
   !> @param[out] S        Source term.
   !> @param[out] D        Diagonal term of derivative.
   !>
@@ -288,7 +290,7 @@ CONTAINS
   !> @date   13-Aug-2021
   !>
   SUBROUTINE W3SIN6 (A, CG, WN2, UABS, USTAR, USDIR, CD, DAIR, &
-       TAUWX, TAUWY, TAUNWX, TAUNWY, S, D )
+       TAUWX, TAUWY, TAUNWX, TAUNWY, CHARN, S, D )
     !/
     !/                  +-----------------------------------+
     !/                  | WAVEWATCH III      NOAA/NCEP/NOPP |
@@ -335,6 +337,7 @@ CONTAINS
     !      D¹       R.A. O  Diagonal term of derivative
     !      TAUWX-Y  Real O  Component of the wave-supported stress
     !      TAUNWX-Y Real O  Component of the negative part of the stress
+    !      CHARN    Real O  Charnock parameter
     !      ¹ Stored as 1-D array with dimension NTH*NK (column by column).
     !     ----------------------------------------------------------------
     !
@@ -389,7 +392,7 @@ CONTAINS
     !/ Parameter list
     REAL, INTENT(IN)       :: A (NSPEC), CG(NK), WN2(NSPEC)
     REAL, INTENT(IN)       :: UABS, USTAR, USDIR, CD, DAIR
-    REAL, INTENT(OUT)      :: TAUWX, TAUWY, TAUNWX, TAUNWY
+    REAL, INTENT(OUT)      :: TAUWX, TAUWY, TAUNWX, TAUNWY, CHARN
     REAL, INTENT(OUT)      :: S(NSPEC), D(NSPEC)
     !/
     !/ ------------------------------------------------------------------- /
@@ -487,7 +490,7 @@ CONTAINS
     CINV    = CINV2(IKN)
     SDENSIG = RESHAPE(S*SIG2/CG2,(/ NTH,NK /))
     CALL LFACTOR(SDENSIG, CINV, UABS, USTAR, USDIR, SIG, DSII, &
-         LFACT, TAUWX, TAUWY                          )
+         LFACT, TAUWX, TAUWY, CHARN                   )
     !
     !/ 6) --- apply reduction (LFACT) to the entire spectrum ------------- /
     IF (SUM(LFACT) .LT. NK) THEN
@@ -761,13 +764,14 @@ CONTAINS
   !> @param[out] LFACT  Factor array.
   !> @param[out] TAUWX  Component of the wave-supported stress.
   !> @param[out] TAUWY  Component of the wave-supported stress.
+  !> @param[out] CHARN  Charnock parameter.
   !>
   !> @author S. Zieger
   !> @author Q. Liu
-  !> @date   26-Jun-2018
+  !> @date   11-Oct-2024
   !>
   SUBROUTINE LFACTOR(S, CINV, U10, USTAR, USDIR, SIG, DSII, &
-       LFACT, TAUWX, TAUWY                    )
+       LFACT, TAUWX, TAUWY, CHARN             )
     !/
     !/                  +-----------------------------------+
     !/                  | WAVEWATCH III           NOAA/NCEP |
@@ -812,6 +816,10 @@ CONTAINS
     !        using reduction factor:
     !                          LFACT(F) = MIN(1,exp((1-U/C(F))*RTAU))
     !        Then alter RTAU and repeat 3) until our constraint is matched.
+    !     4) Charnock parameter after equation (3.47) (Komen el al, 1994):
+    !                                         SIN6AHAT
+    !                          CHARN = -----------------------
+    !                                  SQRT( 1.0 - TAU_W/TAU )
     !
     !  3. Parameters :
     !
@@ -826,6 +834,7 @@ CONTAINS
     !      DSII    R.A. I  Frequency bandwiths [in rad.]
     !      LFACTOR R.A. O  Factor array                       LFACT(sigma)
     !      TAUWX-Y Real O  Component of the wave-supported stress
+    !      CHARN   Real O  Charnock parameter
     !     ----------------------------------------------------------------
     !
     !  4. Subroutines used :
@@ -848,7 +857,7 @@ CONTAINS
     !/
     USE CONSTANTS, ONLY: DAIR, GRAV, TPI
     USE W3GDATMD,  ONLY: NK, NTH, NSPEC, DTH, XFR, ECOS, ESIN
-    USE W3GDATMD,  ONLY: SIN6WS
+    USE W3GDATMD,  ONLY: SIN6WS, SIN6AHAT
     USE W3ODATMD,  ONLY: NDST, NDSE, IAPROC, NAPERR
     USE W3TIMEMD,  ONLY: STME21
     USE W3WDATMD,  ONLY: TIME
@@ -866,6 +875,7 @@ CONTAINS
     REAL, INTENT(IN)  :: DSII(NK)       ! frequency bandwidths
     REAL, INTENT(OUT) :: LFACT(NK)      ! correction factor
     REAL, INTENT(OUT) :: TAUWX, TAUWY   ! normal stress components
+    REAL, INTENT(OUT) :: CHARN          ! Charnock parameter
     !
     !/    --- local parameters (in order of appearance) ------------------ /
 #ifdef W3_S
@@ -1019,6 +1029,9 @@ CONTAINS
     END IF
     !
     LFACT(1:NK) = LF10Hz(1:NK)
+    !
+    !/ 4) --- Sea-state depended Charnoc parameter ----------------------- /
+    CHARN = SIN6AHAT / SQRT(1.0 - MIN(TAU_WAV/TAU, 0.999))
     !
 #ifdef W3_T6
     WRITE (NDST,273) 'Sin ', IDTIME(1:19), SDENS10Hz*TPI
