@@ -729,8 +729,7 @@
         "valid-options": [
             {
                 "name": "OASIS",
-                "build_files": ["w3oacpmd.F90"],
-                "conflicts": ["FLX1", "FLX2", "FLX3", "FLX4"]
+                "build_files": ["w3oacpmd.F90"]
 
             }
         ]
