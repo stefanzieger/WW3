@@ -1,11 +1,15 @@
 find_library(metis_lib NAMES libmetis.a libmetis.so libmetis.dylib HINTS ENV METIS_PATH PATH_SUFFIXES lib)
 find_path(metis_inc metis.h HINTS ENV METIS_PATH PATH_SUFFIXES include)
 
+find_package(GKLIB REQUIRED)
+
 add_library(METIS::METIS STATIC IMPORTED)
 
 set_target_properties(METIS::METIS PROPERTIES
   IMPORTED_LOCATION "${metis_lib}"
   INTERFACE_INCLUDE_DIRECTORIES "${metis_inc}")
+
+target_link_libraries(METIS::METIS INTERFACE GKLIB::GKLIB)
 
 ## Finalize find_package
 include(FindPackageHandleStandardArgs)
