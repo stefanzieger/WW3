@@ -7,12 +7,13 @@ set_target_properties(GKLIB::GKLIB PROPERTIES
   IMPORTED_LOCATION "${gklib_lib}"
   INTERFACE_INCLUDE_DIRECTORIES "${gklib_inc}")
 
-## Finalize find_package
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args(
-    ${CMAKE_FIND_PACKAGE_NAME}
-    REQUIRED_VARS gklib_lib
-    gklib_inc)
-
-message(STATUS "Found GKLIB: ${gklib_lib}")
+if(gklib_inc MATCHES "NOTFOUND" OR gklib_lib MATCHES "NOTFOUND")
+  set(${CMAKE_FIND_PACKAGE_NAME}_FOUND False)
+else()
+  find_package_handle_standard_args(
+      ${CMAKE_FIND_PACKAGE_NAME}
+      REQUIRED_VARS gklib_lib
+      gklib_inc)
+endif()
