@@ -821,6 +821,9 @@ MODULE W3GRIDMD
   INTEGER                 :: TAILTYPE
   REAL                    :: TAILLEV, TAILT1, TAILT2
 #endif
+#if defined(W3_FLD1) || defined(W3_FLD2)
+  REAL                    :: FALPHA
+#endif
 #ifdef W3_FLX3
   INTEGER                 :: CTYPE
   REAL                    :: CDMAX
@@ -953,10 +956,10 @@ MODULE W3GRIDMD
 #endif
   !
 #ifdef W3_FLD1
-  NAMELIST /FLD1/ TAILTYPE, TAILLEV, TAILT1, TAILT2
+  NAMELIST /FLD1/ TAILTYPE, TAILLEV, TAILT1, TAILT2, FALPHA
 #endif
 #ifdef W3_FLD2
-  NAMELIST /FLD2/ TAILTYPE, TAILLEV, TAILT1, TAILT2
+  NAMELIST /FLD2/ TAILTYPE, TAILLEV, TAILT1, TAILT2, FALPHA
 #endif
 #ifdef W3_FLX3
   NAMELIST /FLX3/ CDMAX, CTYPE
@@ -3169,12 +3172,20 @@ CONTAINS
     TAILLEV  = 0.006
     TAILT1 = 1.25
     TAILT2 = 3.00
+    FALPHA = 0.0095
 #endif
 #ifdef W3_FLD2
     TAILTYPE = 0
     TAILLEV  = 0.006
     TAILT1 = 1.25
     TAILT2 = 3.00
+    FALPHA = 0.0095
+#endif
+#if defined(W3_FLD1) && defined(W3_ST4)
+    FALPHA = AALPHA
+#endif
+#if defined(W3_FLD2) && defined(W3_ST4)
+    FALPHA = AALPHA
 #endif
     !
 #ifdef W3_FLD1
@@ -3184,6 +3195,7 @@ CONTAINS
     TAIL_ID = TAILTYPE
     TAIL_TRAN1 = TAILT1
     TAIL_TRAN2 = TAILT2
+    FLDALPHA = FALPHA
 #endif
 #ifdef W3_FLD2
     CALL READNL ( NDSS, 'FLD2', STATUS )
@@ -3192,6 +3204,7 @@ CONTAINS
     TAIL_ID = TAILTYPE
     TAIL_TRAN1 = TAILT1
     TAIL_TRAN2 = TAILT2
+    FLDALPHA = FALPHA
 #endif
     !
     ! 6.o End of namelist processing
@@ -3440,10 +3453,12 @@ CONTAINS
       END IF
       !
 #ifdef W3_FLD1
-      WRITE(NDSO,2987) TAIL_ID, TAIL_LEV, TAIL_TRAN1, TAIL_TRAN2
+      WRITE(NDSO,2987) TAIL_ID, TAIL_LEV, TAIL_TRAN1, TAIL_TRAN2, &
+           FLDALPHA
 #endif
 #ifdef W3_FLD2
-      WRITE(NDSO,2987) TAIL_ID, TAIL_LEV, TAIL_TRAN1, TAIL_TRAN2
+      WRITE(NDSO,2987) TAIL_ID, TAIL_LEV, TAIL_TRAN1, TAIL_TRAN2, &
+           FLDALPHA
 #endif
 #ifdef W3_RTD
       WRITE(NDSO,4991) PLAT, PLON, UNROT
@@ -6854,7 +6869,7 @@ CONTAINS
          ', REFICEBERG =',F5.2,', REFCOSP_STRAIGHT =',F4.1,' /')
     !
 2987 FORMAT ( '  &FLD TAIL_ID =',I1,' TAIL_LEV =',F5.4,' TAILT1 =',F5.3,&
-         ' TAILT2 =',F5.3,' /')
+         ' TAILT2 =',F5.3,' FALPHA =',F8.5,' /')
 #ifdef W3_RTD
 
 4991 FORMAT ( '  &ROTD PLAT =', F6.2,', PLON =', F7.2,', UNROT =',L3,' /')

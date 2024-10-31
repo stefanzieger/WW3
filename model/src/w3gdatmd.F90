@@ -835,11 +835,11 @@ MODULE W3GDATMD
     REAL :: DUMMY
 #ifdef W3_FLD1
     INTEGER               :: Tail_ID
-    REAL                  :: Tail_Lev, TAIL_TRAN1, TAIL_TRAN2
+    REAL                  :: Tail_Lev, TAIL_TRAN1, TAIL_TRAN2, FLDALPHA
 #endif
 #ifdef W3_FLD2
     INTEGER               :: Tail_ID
-    REAL                  :: Tail_Lev, TAIL_TRAN1, TAIL_TRAN2
+    REAL                  :: Tail_Lev, TAIL_TRAN1, TAIL_TRAN2, FLDALPHA
 #endif
   END TYPE FLDP
   TYPE SFLP
@@ -1268,11 +1268,11 @@ MODULE W3GDATMD
   !/
 #ifdef W3_FLD1
   INTEGER, POINTER         :: TAIL_ID
-  REAL, POINTER            :: TAIL_LEV, TAIL_TRAN1, TAIL_TRAN2
+  REAL, POINTER            :: TAIL_LEV, TAIL_TRAN1, TAIL_TRAN2, FLDALPHA
 #endif
 #ifdef W3_FLD2
   INTEGER, POINTER         :: TAIL_ID
-  REAL, POINTER            :: TAIL_LEV, TAIL_TRAN1, TAIL_TRAN2
+  REAL, POINTER            :: TAIL_LEV, TAIL_TRAN1, TAIL_TRAN2, FLDALPHA
 #endif
   !/
   !/ Data aliasses for structure SFLP(S)
@@ -2577,12 +2577,14 @@ CONTAINS
     TAIL_LEV => MPARS(IMOD)%FLDPS%TAIL_LEV
     TAIL_TRAN1 => MPARS(IMOD)%FLDPS%TAIL_TRAN1
     TAIL_TRAN2 => MPARS(IMOD)%FLDPS%TAIL_TRAN2
+    FLDALPHA => MPARS(IMOD)%FLDPS%FLDALPHA
 #endif
 #ifdef W3_FLD2
     TAIL_ID  => MPARS(IMOD)%FLDPS%TAIL_ID
     TAIL_LEV => MPARS(IMOD)%FLDPS%TAIL_LEV
     TAIL_TRAN1 => MPARS(IMOD)%FLDPS%TAIL_TRAN1
     TAIL_TRAN2 => MPARS(IMOD)%FLDPS%TAIL_TRAN2
+    FLDALPHA => MPARS(IMOD)%FLDPS%FLDALPHA
 #endif
     !
     !     Structure SFLPS
