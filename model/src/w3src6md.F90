@@ -4,7 +4,7 @@
 !>
 !> @author S. Zieger
 !> @author Q. Liu
-!> @date   26-Jun-2018
+!> @date   11-Oct-2024
 !>
 
 #include "w3macros.h"
@@ -39,7 +39,7 @@ MODULE W3SRC6MD
   !/                                                         (S. Zieger)
   !/    26-Jun-2017 : Recalibration of ST6                ( verison 6.06 )
   !/                                                         (Q. Liu   )
-  !/    11-Oct-2024 : Charnock parameter output added     ( verison 7.14 )
+  !/    11-Oct-2024 : Add Charnock parameter              ( verison 7.14 )
   !/
   !/    Copyright 2009 National Weather Service (NWS),
   !/       National Oceanic and Atmospheric Administration.  All rights
@@ -748,11 +748,16 @@ CONTAINS
   !>
   !> @brief Numerical approximation for the reduction factor.
   !>
-  !> @details Numerical approximation for the reduction factor LFACTOR(f) to
-  !>  reduce energy in the high-frequency part of the resolved part
+  !> @details Numerical approximation for the reduction factor LFACTOR(f)
+  !>  to reduce energy in the high-frequency part of the resolved part
   !>  of the spectrum to meet the constraint on total stress (TAU).
   !>  The constraint is TAU <= TAU_TOT (TAU_TOT = TAU_WAV + TAU_VIS),
   !>  thus the wind input is reduced to match our constraint.
+  !>  This subroutine will compute the charnock parameter
+  !>  CHARN = CHKMIN / SQRT(1-TAU_WAV/TAU_TOT) with CHKMIN being the
+  !>  minimum value. To allow for a reduction of surface drag at high
+  !>  wind speeds a threshold based minimum charnock parameter is
+  !>  optional.
   !>
   !> @param[in]  S      Wind input energy density spectrum.
   !> @param[in]  CINV   Inverse phase speed.
@@ -817,10 +822,16 @@ CONTAINS
     !                          LFACT(F) = MIN(1,exp((1-U/C(F))*RTAU))
     !        Then alter RTAU and repeat 3) until our constraint is matched.
     !     4) Charnock parameter after equation (3.47) (Komen el al, 1994):
-    !                                         SIN6AHAT
-    !                          CHARN = -----------------------
-    !                                  SQRT( 1.0 - TAU_W/TAU )
+    !                            CHKMIN
+    !           CHARN = ---------------------------
+    !                   SQRT( 1.0 - TAU_W/TAU_TOT )
     !
+    !        OPTIONAL: To allow for a reduction of surface drag at high
+    !        wind speeds a threshold based minimum charnock parameter
+    !        CHKMIN is adopted (Breivik et al, 2022, JGR):
+    !                                                            U-UCAP
+    !           CHKMIN = CHKINF + 0.5(CHKMIN - CHKINF)*(1 - TANH ------)
+    !                                                            DELTA
     !  3. Parameters :
     !
     !     Parameter list
@@ -857,7 +868,8 @@ CONTAINS
     !/
     USE CONSTANTS, ONLY: DAIR, GRAV, TPI
     USE W3GDATMD,  ONLY: NK, NTH, NSPEC, DTH, XFR, ECOS, ESIN
-    USE W3GDATMD,  ONLY: SIN6WS, SIN6AHAT
+    USE W3GDATMD,  ONLY: SIN6WS, SIN6CHKMIN, SIN6FLCAP,             &
+                         SIN6CHKCAP, SIN6CHKINF, SIN6CHKSIG
     USE W3ODATMD,  ONLY: NDST, NDSE, IAPROC, NAPERR
     USE W3TIMEMD,  ONLY: STME21
     USE W3WDATMD,  ONLY: TIME
@@ -893,6 +905,7 @@ CONTAINS
     REAL              :: TAU_TOT, TAU, TAU_VIS, TAU_WAV
     REAL              :: TAUVX, TAUVY, TAUX, TAUY
     REAL              :: TAU_NND, TAU_INIT(2)
+    REAL              :: CHKMIN
     REAL              :: UPROXY, RTAU, DRTAU, ERR
     LOGICAL           :: OVERSHOT
     CHARACTER(LEN=23) :: IDTIME
@@ -1030,8 +1043,16 @@ CONTAINS
     !
     LFACT(1:NK) = LF10Hz(1:NK)
     !
-    !/ 4) --- Sea-state depended Charnoc parameter ----------------------- /
-    CHARN = SIN6AHAT / SQRT(1.0 - MIN(TAU_WAV/TAU, 0.999))
+    !/ 4) --- Sea-state depended Charnoc parameter w/ wind speed cap --------- /
+    !
+    CHKMIN = SIN6CHKMIN
+    !
+    IF (SIN6FLCAP) THEN
+      CHKMIN = SIN6CHKINF + 0.5 * (SIN6CHKMIN - SIN6CHKINF) *  &
+             (1.0 - TANH( (U10 - SIN6CHKCAP) / SIN6CHKSIG ))
+    END IF
+    !
+    CHARN = CHKMIN / SQRT(1.0 - MIN(TAU_WAV / TAU_TOT, 0.999))
     !
 #ifdef W3_T6
     WRITE (NDST,273) 'Sin ', IDTIME(1:19), SDENS10Hz*TPI

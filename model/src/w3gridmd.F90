@@ -869,8 +869,8 @@ MODULE W3GRIDMD
 #endif
   !
 #ifdef W3_ST6
-  REAL                    :: SINA0, SINWS, SINFC, SINAHAT,        &
-       SDSA1, SDSA2, SWLB1
+  REAL                    :: SINA0, SINWS, SINFC, CHKMIN,        &
+       CHKINF, CHKCAP, CHKSIG, SDSA1, SDSA2, SWLB1
   INTEGER                 :: SDSP1, SDSP2
   LOGICAL                 :: SDSET, CSTB1
 #endif
@@ -1056,7 +1056,7 @@ MODULE W3GRIDMD
 #endif
 
 #ifdef W3_ST6
-  NAMELIST /SIN6/ SINA0, SINWS, SINFC, SINAHAT
+  NAMELIST /SIN6/ SINA0, SINWS, SINFC, CHKMIN, CHKINF, CHKCAP, CHKSIG
   NAMELIST /SDS6/ SDSET, SDSA1, SDSA2, SDSP1, SDSP2
   NAMELIST /SWL6/ SWLB1, CSTB1
 #endif
@@ -1747,7 +1747,10 @@ CONTAINS
     SINA0  = 0.09
     SINWS  = 32.0
     SINFC  = 6.0
-    SINAHAT  = 0.0095
+    CHKMIN  = 0.0095
+    CHKINF  = 1.000E-4
+    CHKCAP  = 0.0000
+    CHKSIG  = 5.0000
 #endif
     !
 #ifdef W3_ST1
@@ -1843,10 +1846,20 @@ CONTAINS
     SIN6A0 = SINA0
     SIN6WS = SINWS
     SIN6FC = SINFC
-    SIN6AHAT = SINAHAT
+    SIN6CHKMIN = CHKMIN
+    SIN6CHKINF = CHKINF
+    SIN6CHKCAP = CHKCAP
+    SIN6CHKSIG = CHKSIG
+    SIN6FLCAP = .TRUE.
     J = 1
-    IF ( SIN6A0.LE.0. ) J = 2
-    WRITE (NDSO,921) YESXNO(J), SIN6A0, SIN6WS, SIN6FC, SIN6AHAT
+    JJ = 1
+    IF ( SIN6A0.LE.0.0 ) J = 2
+    IF ( SIN6CHKCAP.LT.1.0E-1 ) THEN
+        JJ = 2
+        SIN6FLCAP = .FALSE.
+    END IF
+    WRITE (NDSO,921) YESXNO(J), SIN6A0, SIN6WS, SIN6FC, SIN6CHKMIN, YESXNO(JJ)
+    IF ( JJ.EQ.1 ) WRITE (NDSO,9210) SIN6CHKINF, SIN6CHKCAP, SIN6CHKSIG
 #endif
     !
     ! 6.e Define Snl.
@@ -3251,7 +3264,7 @@ CONTAINS
            CAPCHA, CHAMIN, CHA0, UCAP, SIGMAUCAP
 #endif
 #ifdef W3_ST6
-      WRITE (NDSO,2920) SINA0, SINWS, SINFC, SINAHAT
+      WRITE (NDSO,2920) SINA0, SINWS, SINFC, CHKMIN, CHKINF, CHKCAP, CHKSIG
 #endif
 #ifdef W3_NL1
       WRITE (NDSO,2922) LAMBDA, NLPROP, KDCONV, KDMIN,       &
@@ -6313,9 +6326,17 @@ CONTAINS
          '  attenuation factor               :  ',F6.2/ &
          '  wind speed scaling factor        :  ',F6.2/ &
          '  frequency cut-off factor         :  ',F6.2/ &
-         '  minimum Charnock coefficient     :  ',F8.5/ )
+         '  Coupling parameters', /                     &
+         '    minimum Charnock coeficient    :  ',F7.5/ &
+         '    Charnock is capped             :  ',A)
+9210 FORMAT ('      asymptote value              :  ',F7.5/ &
+         '      wind speed threshold         :  ',F5.1/ &
+         '      transition window            :  ',F5.1/ )
+
 2920 FORMAT ( '  &SIN6 SINA0 =', F6.3, ', SINWS =', F6.2, &
-         ', SINFC =', F6.2, ', SINAHAT =', F8.5, ' /')
+         ', SINFC =', F6.2, ', CHKMIN =', F8.5, &
+         ', CHKINF =', F8.5, ', CHKCAP =', F5.1, &
+         ', CHKSIG =', F5.1, ' /')
 #endif
     !
 #ifdef W3_NL0

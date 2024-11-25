@@ -1573,20 +1573,24 @@ CONTAINS
     IF ( WRITE ) THEN
       WRITE (NDSM) SIN6A0, SDS6ET, SDS6A1, SDS6A2,           &
            SDS6P1, SDS6P2, SWL6S6, SWL6B1, SWL6CSTB1,        &
-           SIN6WS, SIN6FC, SIN6AHAT
+           SIN6WS, SIN6FC, SIN6CHKMIN, SIN6CHKINF,           &
+           SIN6CHKCAP, SIN6CHKSIG, SIN6FLCAP
 #ifdef W3_ASCII
       WRITE (NDSA,*) 'SIN6A0, SDS6ET, SDS6A1, SDS6A2,        &
            SDS6P1, SDS6P2, SWL6S6, SWL6B1, SWL6CSTB1,        &
-           SIN6WS, SIN6FC, AIN6AHAT:',                       &
+           SIN6WS, SIN6FC, SIN6CHKMIN, SIN6CHKINF,           &
+           SIN6CHKCAP, SIN6CHKSIG, SIN6FLCAP:',              &
                    SIN6A0, SDS6ET, SDS6A1, SDS6A2,           &
            SDS6P1, SDS6P2, SWL6S6, SWL6B1, SWL6CSTB1,        &
-           SIN6WS, SIN6FC, SIN6AHAT
+           SIN6WS, SIN6FC, SIN6CHKMIN, SIN6CHKINF,
+           SIN6CHKCAP, SIN6CHKSIG, SIN6FLCAP
 #endif
     ELSE
       READ (NDSM,END=801,ERR=802,IOSTAT=IERR)                &
            SIN6A0, SDS6ET, SDS6A1, SDS6A2,                   &
            SDS6P1, SDS6P2, SWL6S6, SWL6B1, SWL6CSTB1,        &
-           SIN6WS, SIN6FC, SIN6AHAT
+           SIN6WS, SIN6FC, SIN6CHKMIN, SIN6CHKINF,           &
+           SIN6CHKCAP, SIN6CHKSIG, SIN6FLCAP
     END IF
 #endif
     !
