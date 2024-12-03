@@ -22,7 +22,7 @@
 !>
 !> @author S. Zieger
 !> @author Q. Liu
-!> @date   11-Oct-2024
+!> @date   02-Dec-2024
 !>
 MODULE W3SRC6MD
   !/
@@ -31,7 +31,7 @@ MODULE W3SRC6MD
   !/                  |           S. Zieger               |
   !/                  |           Q. Liu                  |
   !/                  |                        FORTRAN 90 |
-  !/                  | Last update :         11-Oct-2024 |
+  !/                  | Last update :         02-Dec-2024 |
   !/                  +-----------------------------------+
   !/
   !/    29-May-2009 : Origination (w3srcxmd.ftn)          ( version 3.14 )
@@ -305,7 +305,7 @@ CONTAINS
     !/
     !/    26-Jun-2018 : UPROXY Update & UABS                ( version 6.06 )
     !/                                                        (Q. Liu)
-    !/    13-Aug-2021 : Consider DAIR a variable           ( version x.xx )
+    !/    13-Aug-2021 : Consider DAIR a variable            ( version 7.14 )
     !/
     !  1. Purpose :
     !
@@ -489,8 +489,8 @@ CONTAINS
     !         spectral density of the wind input ------------------------- /
     CINV    = CINV2(IKN)
     SDENSIG = RESHAPE(S*SIG2/CG2,(/ NTH,NK /))
-    CALL LFACTOR(SDENSIG, CINV, UABS, USTAR, USDIR, SIG, DSII, &
-         LFACT, TAUWX, TAUWY, CHARN                   )
+    CALL LFACTOR(SDENSIG, CINV, UABS, USTAR, USDIR, DAIR, SIG, DSII, &
+         LFACT, TAUWX, TAUWY, CHARN             )
     !
     !/ 6) --- apply reduction (LFACT) to the entire spectrum ------------- /
     IF (SUM(LFACT) .LT. NK) THEN
@@ -764,6 +764,7 @@ CONTAINS
   !> @param[in]  U10    Wind speed.
   !> @param[in]  USTAR  Friction velocity.
   !> @param[in]  USDIR  Wind direction.
+  !> @param[in]  DAIR   Air densiry.
   !> @param[in]  SIG    Relative frequencies (in rad.).
   !> @param[in]  DSII   Frequency bandwidths (in rad.).
   !> @param[out] LFACT  Factor array.
@@ -775,7 +776,7 @@ CONTAINS
   !> @author Q. Liu
   !> @date   11-Oct-2024
   !>
-  SUBROUTINE LFACTOR(S, CINV, U10, USTAR, USDIR, SIG, DSII, &
+  SUBROUTINE LFACTOR(S, CINV, U10, USTAR, USDIR, DAIR, SIG, DSII, &
        LFACT, TAUWX, TAUWY, CHARN             )
     !/
     !/                  +-----------------------------------+
@@ -783,13 +784,14 @@ CONTAINS
     !/                  |           S. Zieger               |
     !/                  |           Q. Liu                  |
     !/                  |                        FORTRAN 90 |
-    !/                  | Last update :         26-Jun-2018 |
+    !/                  | Last update :         02-Dec-2024 |
     !/                  +-----------------------------------+
     !/
     !/    15-Feb-2011 : Implemented following Rogers et al. (2012)
     !/                                                        (S. Zieger)
     !/    26-Jun-2018 : UPROXY, DSII10Hz Updates            ( version 6.06 )
     !/                                                        (Q. Liu   )
+    !/    02-Dec-2024 : Consider DAIR a variable           ( version 7.14 )
     !
     !     Rogers et al. (2012) JTECH 29(9), 1329-1346
     !
@@ -841,6 +843,7 @@ CONTAINS
     !      U10     Real I  Wind speed (10m)
     !      USTAR   Real I  Friction velocity
     !      USDIR   Real I  Wind direction
+    !      DAIR    Real I  Air densiry
     !      SIG     R.A. I  Relative frequencies [in rad.]
     !      DSII    R.A. I  Frequency bandwiths [in rad.]
     !      LFACTOR R.A. O  Factor array                       LFACT(sigma)
@@ -866,7 +869,7 @@ CONTAINS
     !      case the last approximation for RTAU is used.
     !
     !/
-    USE CONSTANTS, ONLY: DAIR, GRAV, TPI
+    USE CONSTANTS, ONLY: GRAV, TPI
     USE W3GDATMD,  ONLY: NK, NTH, NSPEC, DTH, XFR, ECOS, ESIN
     USE W3GDATMD,  ONLY: SIN6WS, SIN6CHKMIN, SIN6FLCAP,             &
                          SIN6CHKCAP, SIN6CHKINF, SIN6CHKSIG
@@ -883,6 +886,7 @@ CONTAINS
     REAL, INTENT(IN)  :: CINV(NK)       ! inverse phase speed
     REAL, INTENT(IN)  :: U10            ! wind speed
     REAL, INTENT(IN)  :: USTAR, USDIR   ! friction velocity & direction
+    REAL, INTENT(IN)  :: DAIR           ! air densiry
     REAL, INTENT(IN)  :: SIG(NK)        ! relative frequencies
     REAL, INTENT(IN)  :: DSII(NK)       ! frequency bandwidths
     REAL, INTENT(OUT) :: LFACT(NK)      ! correction factor
@@ -1052,7 +1056,7 @@ CONTAINS
              (1.0 - TANH( (U10 - SIN6CHKCAP) / SIN6CHKSIG ))
     END IF
     !
-    CHARN = CHKMIN / SQRT(1.0 - MIN(TAU_WAV / TAU_TOT, 0.999))
+    CHARN = CHKMIN / SQRT(1.0 - MIN(TAU_WAV / TAU_TOT, 0.995))
     !
 #ifdef W3_T6
     WRITE (NDST,273) 'Sin ', IDTIME(1:19), SDENS10Hz*TPI
